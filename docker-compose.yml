@@ -1,0 +1,10 @@
+services:
+  orcha:
+    build: .
+    image: orcha:latest
+    volumes:
+      - .:/workspace
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ORCHA_REFACTOR_CMD=bun /opt/ai-scripts/Refactor.ts
