@@ -6,6 +6,7 @@ import { GoogleChat } from './Vendors/Google';
 import { MoonshotChat } from './Vendors/Moonshot';
 import { OpenAIChat } from './Vendors/OpenAI';
 import { XAIChat } from './Vendors/xai';
+import { QwenChat } from './Vendors/Qwen';
 import { countTokens } from 'gpt-tokenizer/model/gpt-4o';
 
 export const MODELS: Record<string, string> = {
@@ -40,9 +41,13 @@ export const MODELS: Record<string, string> = {
   // Moonshot Kimi K2
   'k': 'moonshot:kimi-latest',
   'K': 'moonshot:kimi-latest',
+
+  // Qwen
+  'q': 'qwen:qwen-coder-plus',
+  'Q': 'qwen:qwen-coder-plus',
 };
 
-export type Vendor = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'xai' | 'moonshot';
+export type Vendor = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'xai' | 'moonshot' | 'qwen';
 export type ThinkingLevel = 'none' | 'low' | 'medium' | 'high' | 'auto';
 
 export interface ResolvedModelSpec {
@@ -89,7 +94,7 @@ export interface ChatInstance {
   ask(userMessage: string | null, options: AskOptions): Promise<string | { messages: any[] }>;
 }
 
-const SUPPORTED_VENDORS = new Set<Vendor>(['openai', 'anthropic', 'google', 'openrouter', 'xai', 'moonshot']);
+const SUPPORTED_VENDORS = new Set<Vendor>(['openai', 'anthropic', 'google', 'openrouter', 'xai', 'moonshot', 'qwen']);
 
 const CEREBRAS_MODELS = new Set<string>([
   'gpt-oss-120b',
@@ -117,6 +122,9 @@ function inferVendor(model: string): Vendor {
   }
   if (normalized.startsWith('moonshot') || normalized.startsWith('kimi')) {
     return 'moonshot';
+  }
+  if (normalized.startsWith('qwen')) {
+    return 'qwen';
   }
   if (normalized.includes('/')) {
     return 'openrouter';
@@ -338,6 +346,11 @@ export async function GenAI(modelSpec: string): Promise<ChatInstance> {
   if (resolved.vendor === 'moonshot') {
     const apiKey = await getToken(resolved.vendor);
     return new MoonshotChat(apiKey, resolved.model, vendorConfig);
+  }
+
+  if (resolved.vendor === 'qwen') {
+    const apiKey = await getToken(resolved.vendor);
+    return new QwenChat(apiKey, resolved.model, vendorConfig);
   }
 
   throw new Error(`Unsupported vendor: ${resolved.vendor}`);

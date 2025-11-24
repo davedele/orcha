@@ -15,7 +15,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 
 # Install AI-scripts (Refactor.ts)
 WORKDIR /opt
-COPY ai_scripts_debug /opt/ai-scripts
+COPY ai_scripts /opt/ai-scripts
 # Install dependencies for AI-scripts if any (usually just bun install)
 WORKDIR /opt/ai-scripts
 RUN bun install

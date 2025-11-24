@@ -4,11 +4,14 @@ services:
     image: orcha:latest
     volumes:
       - ../:/workspace
+    env_file:
+      - .env
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - MOONSHOT_API_KEY=${MOONSHOT_API_KEY}
+      - QWEN_API_KEY=${QWEN_API_KEY}
       - ORCHA_REFACTOR_CMD=bun /opt/ai-scripts/Refactor.ts
     # Keep the container running so we can reuse it with 'exec'
     tty: true
