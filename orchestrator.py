@@ -216,6 +216,36 @@ def node_prepare_repo(state: OrchestratorState) -> OrchestratorState:
     if not (root / ".git").is_dir():
         raise RuntimeError(f".git not found under {root}")
 
+    # RECOVERY LOGIC:
+    # If we are currently on a 'refactor/' branch, it might be a leftover from a crashed run.
+    # We should try to switch back to a main branch before checking for cleanliness.
+    current_branch = run_capture(["git", "rev-parse", "--abbrev-ref", "HEAD"], root)
+    if current_branch.startswith("refactor/"):
+        logs.append(f"[prepare_repo] detected stale refactor branch '{current_branch}'")
+        
+        # Try to find a default branch to switch to
+        possible_bases = ["main", "master", "dev", "development"]
+        fallback_branch = None
+        for b in possible_bases:
+            try:
+                run(["git", "rev-parse", "--verify", b], cwd=root, check=True, capture_output=True)
+                fallback_branch = b
+                break
+            except subprocess.CalledProcessError:
+                continue
+        
+        if fallback_branch:
+            logs.append(f"[prepare_repo] attempting to switch to '{fallback_branch}' and delete stale branch")
+            try:
+                # Force checkout to base (discarding changes on the stale refactor branch)
+                git(["checkout", "-f", fallback_branch], cwd=root)
+                git(["branch", "-D", current_branch], cwd=root)
+                logs.append(f"[prepare_repo] successfully cleaned up '{current_branch}'")
+            except subprocess.CalledProcessError as e:
+                logs.append(f"[prepare_repo] WARNING: failed to cleanup stale branch: {e}")
+        else:
+            logs.append("[prepare_repo] WARNING: could not find a base branch (main/master) to switch to.")
+
     ensure_git_clean(root)
 
     base_branch = run_capture(["git", "rev-parse", "--abbrev-ref", "HEAD"], root)
