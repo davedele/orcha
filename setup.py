@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="orcha",
     version="0.1.0",
-    py_modules=["orchestrator", "scan_and_refactor", "propagate_rename"],
+    py_modules=["orchestrator", "scan_and_refactor", "propagate_rename", "config"],
     install_requires=[
         "langgraph>=0.0.10",
         "typing-extensions>=4.0.0",
