@@ -82,6 +82,13 @@ def load_successful_paths(log_file: Path) -> set:
     return success
 
 
+def find_git_root(start_path: Path) -> Path:
+    current = start_path.resolve()
+    for parent in [current] + list(current.parents):
+        if (parent / ".git").is_dir():
+            return parent
+    return current
+
 def main():
     parser = argparse.ArgumentParser(
         description="Mass run AI refactor across a codebase using orchestrator.py."
@@ -148,17 +155,20 @@ def main():
         print(f"CRITICAL: Orchestrator script not found at {orchestrator_script}", file=sys.stderr)
         sys.exit(1)
 
-    root = Path(args.dir).resolve()
-    if not root.exists():
-        print(f"Error: directory {root} does not exist", file=sys.stderr)
+    scan_dir = Path(args.dir).resolve()
+    if not scan_dir.exists():
+        print(f"Error: directory {scan_dir} does not exist", file=sys.stderr)
         sys.exit(1)
+        
+    workspace_root = find_git_root(scan_dir)
 
-    targets = find_targets(root, args.ext)
+    targets = find_targets(scan_dir, args.ext)
     if not targets:
-        print(f"No *{args.ext} files found under {root}")
+        print(f"No *{args.ext} files found under {scan_dir}")
         sys.exit(0)
 
-    print(f"Scanning under: {root}")
+    print(f"Scanning under: {scan_dir}")
+    print(f"Workspace root: {workspace_root}")
     print(f"Found {len(targets)} target file(s).")
 
     # History / Resume logic
@@ -178,7 +188,7 @@ def main():
     skipped_count = 0
 
     for p in targets:
-        rel = p.relative_to(root)
+        rel = p.relative_to(workspace_root)
         rel_str = rel.as_posix()
 
         # Resume logic
@@ -209,7 +219,7 @@ def main():
             "--instruction",
             args.instruction,
             "--root",
-            str(root),
+            str(workspace_root),
             "--branch",
             branch,
             "--json",  # Enable JSON output
@@ -282,7 +292,7 @@ def main():
             fail_count += 1
 
     print("\n=== Summary ===")
-    print(f"Root:    {root}")
+    print(f"Root:    {scan_dir}")
     print(f"Ext:     {args.ext}")
     print(f"Total:   {len(targets)}")
     print(f"Success: {success_count}")

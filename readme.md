@@ -22,9 +22,14 @@ This handles all dependencies (Python, Node/Bun, Refactor tool) for you.
     ```bash
     # Set your API keys first
     export OPENAI_API_KEY=sk-...
+    export GOOGLE_API_KEY=...
+    export MOONSHOT_API_KEY=...
     
-    # Build and run
-    docker compose run orcha --help
+    # Start the persistent container
+    docker compose up -d
+
+    # Run commands inside the container
+    docker compose exec orcha orcha --help
     ```
 
 ### Option B: Local Installation
@@ -55,7 +60,7 @@ The tools are located in the root directory. You can install them as a python pa
 Prefix commands with `docker compose run orcha`. The current directory is mounted to `/workspace`.
 
 ```bash
-docker compose run orcha orcha-scan src --instruction "Fix types" --dry-run
+docker compose exec orcha orcha-scan src --instruction "Fix types" --dry-run
 ```
 
 ### With Local Install
@@ -156,6 +161,11 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 ## Customization
 
   * **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
+    *   **Supported Models:**
+        *   `openai` (default)
+        *   `anthropic`
+        *   `k` (Kimi K2 - Moonshot)
+        *   `i` (Gemini 1.5 Pro)
   * **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
   * **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
 
@@ -172,3 +182,5 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 | **Tests fail immediately** | Ensure the `--test-cmd` you passed is valid for that specific file. |
 | **Refactor.ts not found** | Check the `refactor_cmd` argument in `orchestrator.py`. Ensure you have the dependency installed. |
 | **Infinite Loop** | The agent might be "fixing" code back and forth. Reduce `MAX_RETRIES` to 1. |
+| **"Git user not configured"** | Run `git config --global user.email ...` inside the container or mount your .gitconfig. |
+| **API Key Errors** | Ensure `GOOGLE_API_KEY` or `MOONSHOT_API_KEY` are set if using those models. |

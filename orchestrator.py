@@ -103,7 +103,7 @@ def run_capture(cmd, cwd: Path) -> str:
 
 
 def git(cmd_args, cwd: Path, check=True) -> subprocess.CompletedProcess:
-    return run(["git"] + cmd_args, cwd=cwd, check=check)
+    return run(["git"] + cmd_args, cwd=cwd, check=check, capture_output=True)
 
 
 def ensure_git_clean(cwd: Path):
@@ -279,9 +279,13 @@ def node_run_refactor(state: OrchestratorState) -> OrchestratorState:
     logs.append(f"[run_refactor] cmd={' '.join(cmd)}")
 
     try:
-        proc = run(cmd, cwd=root, check=False)
+        proc = run(cmd, cwd=root, check=False, capture_output=True)
         code = proc.returncode
         logs.append(f"[run_refactor] exit={code}")
+        if proc.stdout:
+            logs.append(f"[run_refactor] stdout: {proc.stdout.strip()}")
+        if proc.stderr:
+            logs.append(f"[run_refactor] stderr: {proc.stderr.strip()}")
         return {
             "refactor_exit_code": code,
             "logs": logs,
@@ -582,17 +586,25 @@ def main():
                     print(line)
                 
         except Exception as e:
-            print(f"\n[CRITICAL ERROR] Orchestrator crashed: {e}")
-            # Attempt emergency cleanup to avoid leaving user on a dirty branch
-            try:
-                print("Attempting emergency cleanup...")
-                repo_root = Path(workspace_root)
-                # We need to find the base branch (we might not know it if prepare_repo failed)
-                # But we can try to checkout 'main' or 'master' as a fallback or just warn the user.
-                print(f"  You may be on temporary branch '{branch_name}'.")
-                print("   Please run: git checkout - && git branch -D " + branch_name)
-            except:
-                pass
+            if args.json:
+                error_output = {
+                    "tests_passed": False,
+                    "refactor_exit_code": 1,
+                    "retry_count": 0,
+                    "last_test_error": str(e),
+                    "logs": [f"[CRITICAL ERROR] Orchestrator crashed: {e}"],
+                    "status": "crash"
+                }
+                print(json.dumps(error_output))
+            else:
+                print(f"\n[CRITICAL ERROR] Orchestrator crashed: {e}")
+                # Attempt emergency cleanup to avoid leaving user on a dirty branch
+                try:
+                    print("Attempting emergency cleanup...")
+                    print(f"  You may be on temporary branch '{branch_name}'.")
+                    print("   Please run: git checkout - && git branch -D " + branch_name)
+                except:
+                    pass
             sys.exit(1)
 
         # Check for failure in the graph execution (tests failed or refactor failed)
