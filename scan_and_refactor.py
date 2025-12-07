@@ -195,11 +195,18 @@ def main():
         print(f"No *{args.ext} files found under {scan_dir}")
         sys.exit(0)
 
+    # Validate worker index
+    if args.worker < 0 or args.worker >= args.total_workers:
+        print(f"Invalid worker index {args.worker} for total {args.total_workers}", file=sys.stderr)
+        sys.exit(1)
+
     # Parallel partitioning: each worker gets every Nth file
     if args.total_workers > 1:
         all_targets = targets
         targets = [f for i, f in enumerate(all_targets) if i % args.total_workers == args.worker]
-        print(f"Worker {args.worker}/{args.total_workers}: processing {len(targets)} of {len(all_targets)} files")
+        print(f"[PARALLEL] Worker {args.worker}/{args.total_workers}: processing {len(targets)} of {len(all_targets)} files")
+    else:
+        print(f"[SERIAL] Processing all {len(targets)} files sequentially")
 
     print(f"Scanning under: {scan_dir}")
     print(f"Workspace root: {workspace_root}")
