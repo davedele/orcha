@@ -69,7 +69,7 @@ For large codebases, run multiple workers in parallel using separate clones:
 # After parallel run completes:
 git checkout main
 git merge --ff-only orcha-merged-YYYYMMDD-HHMMSS
-rm -rf /tmp/orcha-clones  # Cleanup
+rm -rf /tmp/orcha-clones/<repo-name>  # Cleanup (script prints exact path)
 ```
 
 

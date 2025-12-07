@@ -30,8 +30,8 @@ NC='\033[0m'
 # Defaults
 MODEL="i"
 EXT=".js"
-TEST_CMD=""  # Empty = let orchestrator use its default (npm test)
-SKIP_TESTS=true  # Default: skip tests for speed in parallel mode
+TEST_CMD=""  # Populated if user passes --test-cmd
+SKIP_TESTS=true  # Default: skip tests for speed; always passes --test-cmd "true" or user value
 CLONE_BASE="/tmp/orcha-clones"
 ALLOW_DIRTY=false
 
@@ -318,3 +318,4 @@ fi
 
 echo ""
 echo -e "${CYAN}Cleanup clones with: rm -rf ${CLONE_BASE}${NC}"
+echo -e "${CYAN}Or cleanup all repos: rm -rf /tmp/orcha-clones${NC}"
