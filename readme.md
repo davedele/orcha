@@ -51,23 +51,27 @@ For large codebases, run multiple workers in parallel using separate clones:
 # Run with 3 parallel workers (480 files → 160 each)
 /path/to/orcha/orcha-parallel.sh javascripts "Add JSDoc" 3
 
-# Or with bun scripts
-cd /path/to/orcha
-bun run parallel -- javascripts "Add JSDoc" 3
+# With tests enabled
+/path/to/orcha/orcha-parallel.sh src "Add types" 3 --test-cmd "npm test"
 ```
 
-How it works:
-1. Creates N clones of your repo (space-efficient with `--reference`)
-2. Pins all clones to the same base SHA
-3. Each worker processes a disjoint subset of files
-4. Results are merged back to a staging branch
-5. You review and fast-forward main
+**Requirements:**
+- Clean working tree (use `--allow-dirty` to bypass)
+- Named branch (not detached HEAD)
+- TARGET_DIR must be relative path inside repo
+
+**Behavior differences from `orcha-run.sh`:**
+- Tests disabled by default (use `--test-cmd` to enable)
+- Creates staging branch `orcha-merged-*`; must manually fast-forward merge
+- Clones are isolated; no `--skip-git-check` needed
 
 ```bash
 # After parallel run completes:
 git checkout main
 git merge --ff-only orcha-merged-YYYYMMDD-HHMMSS
+rm -rf /tmp/orcha-clones  # Cleanup
 ```
+
 
 
 ## Installation

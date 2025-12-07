@@ -10,6 +10,12 @@
 #
 # Each worker gets a separate clone of the repo, processes a disjoint subset
 # of files, and results are merged back via per-worker remotes.
+#
+# IMPORTANT DIFFERENCES FROM orcha-run.sh:
+#   - Requires clean working tree (no uncommitted changes)
+#   - Tests are disabled by default (use --test-cmd to enable)
+#   - Creates staging branch; you must manually --ff-only merge to main
+#   - TARGET_DIR must be relative to repo root
 
 set -euo pipefail
 
@@ -24,8 +30,10 @@ NC='\033[0m'
 # Defaults
 MODEL="i"
 EXT=".js"
-TEST_CMD="true"
+TEST_CMD=""  # Empty = let orchestrator use its default (npm test)
+SKIP_TESTS=true  # Default: skip tests for speed in parallel mode
 CLONE_BASE="/tmp/orcha-clones"
+ALLOW_DIRTY=false
 
 # Parse required arguments
 if [ $# -lt 3 ]; then
@@ -34,12 +42,16 @@ if [ $# -lt 3 ]; then
     echo "Options:"
     echo "  --model <spec>     Model to use (default: i = Gemini)"
     echo "  --ext <extension>  File extension (default: .js)"
-    echo "  --test-cmd <cmd>   Test command (default: 'true')"
+    echo "  --test-cmd <cmd>   Test command (enables testing; default: tests disabled)"
     echo "  --clone-dir <dir>  Base directory for clones (default: /tmp/orcha-clones)"
+    echo "  --allow-dirty      Allow running with uncommitted changes in working tree"
+    echo ""
+    echo "Note: Tests are disabled by default for speed. Use --test-cmd 'npm test' to enable."
     echo ""
     echo "Examples:"
     echo "  $0 javascripts \"Add JSDoc documentation\" 3"
     echo "  $0 src \"Convert to ES6\" 4 --model s --ext .ts"
+    echo "  $0 src \"Add types\" 3 --test-cmd 'npm test'"
     exit 1
 fi
 
@@ -61,11 +73,16 @@ while [[ $# -gt 0 ]]; do
             ;;
         --test-cmd)
             TEST_CMD="$2"
+            SKIP_TESTS=false
             shift 2
             ;;
         --clone-dir)
             CLONE_BASE="$2"
             shift 2
+            ;;
+        --allow-dirty)
+            ALLOW_DIRTY=true
+            shift
             ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
@@ -74,11 +91,53 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# --- VALIDATION GUARDS ---
+
+# 1. Validate NUM_WORKERS
+if ! [[ "$NUM_WORKERS" =~ ^[0-9]+$ ]] || [ "$NUM_WORKERS" -le 0 ]; then
+    echo -e "${RED}NUM_WORKERS must be a positive integer.${NC}" >&2
+    exit 1
+fi
+
 # Get repo root and base SHA
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 BASE_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 BASE_BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
 ORCHA_DIR="$(dirname "$(realpath "$0")")"
+
+# 2. Check for detached HEAD
+if [ "$BASE_BRANCH" = "HEAD" ]; then
+    echo -e "${RED}Detached HEAD not supported for orcha-parallel.${NC}" >&2
+    echo "Please checkout a named branch first: git checkout <branch>" >&2
+    exit 1
+fi
+
+# 3. Check for dirty working tree
+if [ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]; then
+    if [ "$ALLOW_DIRTY" = true ]; then
+        echo -e "${YELLOW}Warning: Working tree is dirty. Proceeding anyway (--allow-dirty).${NC}"
+    else
+        echo -e "${RED}Working tree is dirty in $REPO_ROOT.${NC}" >&2
+        echo "Commit or stash changes before running orcha-parallel." >&2
+        echo "Use --allow-dirty to bypass this check (refactors will be based on HEAD, not working tree)." >&2
+        exit 1
+    fi
+fi
+
+# 4. Validate TARGET_DIR is relative and exists
+if [[ "$TARGET_DIR" = /* ]]; then
+    echo -e "${RED}TARGET_DIR must be relative to the repo root, not absolute.${NC}" >&2
+    exit 1
+fi
+
+if [ ! -d "$REPO_ROOT/$TARGET_DIR" ]; then
+    echo -e "${RED}Directory '$TARGET_DIR' not found under $REPO_ROOT${NC}" >&2
+    exit 1
+fi
+
+# Scope clone directory by repo name to avoid collisions
+REPO_NAME="$(basename "$REPO_ROOT")"
+CLONE_BASE="${CLONE_BASE}/${REPO_NAME}"
 
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║${NC}         ${GREEN}ORCHA - Parallel Clone Execution${NC}               ${BLUE}║${NC}"
@@ -92,6 +151,7 @@ echo -e "${YELLOW}Instruction:${NC} ${INSTRUCTION}"
 echo -e "${YELLOW}Workers:${NC}     ${NUM_WORKERS}"
 echo -e "${YELLOW}Model:${NC}       ${MODEL}"
 echo -e "${YELLOW}Extension:${NC}   ${EXT}"
+echo -e "${YELLOW}Tests:${NC}       $([ "$SKIP_TESTS" = true ] && echo "Disabled (use --test-cmd to enable)" || echo "$TEST_CMD")"
 echo ""
 
 # Create clone directory
@@ -111,8 +171,6 @@ for i in $(seq 0 $((NUM_WORKERS-1))); do
     git clone --reference "$REPO_ROOT" --quiet "$REPO_ROOT" "$CLONE_DIR"
     # Pin to base SHA
     git -C "$CLONE_DIR" reset --hard "$BASE_SHA" --quiet
-    # Copy orcha scripts (they're not in the repo being refactored)
-    # Note: orcha scripts are expected to be in a separate location
 done
 echo ""
 
@@ -130,17 +188,27 @@ for i in $(seq 0 $((NUM_WORKERS-1))); do
     
     (
         cd "$CLONE_DIR"
-        python3 "${ORCHA_DIR}/scan_and_refactor.py" \
-            "$TARGET_DIR" \
-            --instruction "$INSTRUCTION" \
-            --ext "$EXT" \
-            --model-spec "$MODEL" \
-            --test-cmd "$TEST_CMD" \
-            --skip-git-check \
-            --force-branch \
-            --worker "$i" \
-            --total-workers "$NUM_WORKERS" \
-            > "$LOG_FILE" 2>&1
+        
+        # Build command
+        CMD=(python3 "${ORCHA_DIR}/scan_and_refactor.py"
+            "$TARGET_DIR"
+            --instruction "$INSTRUCTION"
+            --ext "$EXT"
+            --model-spec "$MODEL"
+            --force-branch
+            --worker "$i"
+            --total-workers "$NUM_WORKERS"
+        )
+        
+        # Add test command if specified, otherwise use 'true' to skip
+        if [ "$SKIP_TESTS" = true ]; then
+            CMD+=(--test-cmd "true")
+        elif [ -n "$TEST_CMD" ]; then
+            CMD+=(--test-cmd "$TEST_CMD")
+        fi
+        # Note: --skip-git-check NOT passed; clones are clean so check should pass
+        
+        "${CMD[@]}" > "$LOG_FILE" 2>&1
     ) &
     PIDS+=($!)
 done
