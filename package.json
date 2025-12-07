@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "orcha": "bash ./orcha-run.sh",
+    "parallel": "bash ./orcha-parallel.sh",
     "status": "bash ./orcha-status.sh",
     "status:watch": "bash ./orcha-status.sh --watch",
     "status:failed": "bash ./orcha-status.sh --failed",

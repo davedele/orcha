@@ -43,6 +43,33 @@ cd /path/to/your/project
 
 -----
 
+## Parallel Execution (Speed Up 3x+)
+
+For large codebases, run multiple workers in parallel using separate clones:
+
+```bash
+# Run with 3 parallel workers (480 files → 160 each)
+/path/to/orcha/orcha-parallel.sh javascripts "Add JSDoc" 3
+
+# Or with bun scripts
+cd /path/to/orcha
+bun run parallel -- javascripts "Add JSDoc" 3
+```
+
+How it works:
+1. Creates N clones of your repo (space-efficient with `--reference`)
+2. Pins all clones to the same base SHA
+3. Each worker processes a disjoint subset of files
+4. Results are merged back to a staging branch
+5. You review and fast-forward main
+
+```bash
+# After parallel run completes:
+git checkout main
+git merge --ff-only orcha-merged-YYYYMMDD-HHMMSS
+```
+
+
 ## Installation
 
 ### Option A: Docker (Recommended)

@@ -160,6 +160,19 @@ def main():
         action="store_true",
         help="Force deletion of existing branch if it exists.",
     )
+    # Parallel execution support
+    parser.add_argument(
+        "--worker",
+        type=int,
+        default=0,
+        help="Worker index (0-based) for parallel execution.",
+    )
+    parser.add_argument(
+        "--total-workers",
+        type=int,
+        default=1,
+        help="Total number of workers for parallel execution.",
+    )
 
     args = parser.parse_args()
 
@@ -181,6 +194,12 @@ def main():
     if not targets:
         print(f"No *{args.ext} files found under {scan_dir}")
         sys.exit(0)
+
+    # Parallel partitioning: each worker gets every Nth file
+    if args.total_workers > 1:
+        all_targets = targets
+        targets = [f for i, f in enumerate(all_targets) if i % args.total_workers == args.worker]
+        print(f"Worker {args.worker}/{args.total_workers}: processing {len(targets)} of {len(all_targets)} files")
 
     print(f"Scanning under: {scan_dir}")
     print(f"Workspace root: {workspace_root}")
