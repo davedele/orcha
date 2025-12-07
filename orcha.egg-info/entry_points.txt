@@ -1,0 +1,4 @@
+[console_scripts]
+orcha = orchestrator:main
+orcha-propagate = propagate_rename:main
+orcha-scan = scan_and_refactor:main

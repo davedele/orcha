@@ -1,0 +1,34 @@
+{
+  "name": "orcha",
+  "version": "0.2.0",
+  "description": "AI Refactoring Assembly Line - Multi-agent code refactoring pipeline",
+  "type": "module",
+  "scripts": {
+    "orcha": "bash ./orcha-run.sh",
+    "status": "bash ./orcha-status.sh",
+    "status:watch": "bash ./orcha-status.sh --watch",
+    "status:failed": "bash ./orcha-status.sh --failed",
+    "status:git": "bash ./orcha-status.sh --git",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f orcha"
+  },
+  "bin": {
+    "orcha-run": "./orcha-run.sh",
+    "orcha-status": "./orcha-status.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davedele/orcha.git"
+  },
+  "keywords": [
+    "ai",
+    "refactoring",
+    "code-generation",
+    "llm",
+    "multi-agent"
+  ],
+  "author": "davedele",
+  "license": "MIT"
+}

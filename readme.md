@@ -9,6 +9,37 @@ A multi-agent pipeline for orchestrating large-scale code refactors safely. This
 | **orchestrator.py** | **The Worker** | Refactors a *single file* safely. Creates a git branch, runs the AI, runs tests, and commits only on success. |
 | **scan\_and\_refactor.py** | **The Manager** | Scans your project, filters files (ignoring node\_modules, tests), and assigns work to the Orchestrator. |
 | **propagate\_rename.py** | **The Fixer** | A "Search & Replace" utility to fix broken imports across the project after a rename refactor. |
+| **orcha-run.sh** | **Easy Runner** | Simplified wrapper for running orcha with sensible defaults. |
+| **orcha-status.sh** | **Monitor** | Check run status, view failures, and see recent git activity. |
+
+-----
+
+## Quick Start (Recommended)
+
+The easiest way to run orcha is with the wrapper scripts:
+
+```bash
+# Navigate to your project
+cd /path/to/your/project
+
+# Run a dry-run first to see what files will be processed
+/path/to/orcha/orcha-run.sh src "Add JSDoc documentation" --dry-run
+
+# Run for real with Gemini (default model)
+/path/to/orcha/orcha-run.sh src "Add JSDoc documentation"
+
+# Run with Claude Sonnet
+/path/to/orcha/orcha-run.sh src "Convert to ES6" --model s
+
+# Run in background and monitor
+/path/to/orcha/orcha-run.sh src "Modernize code" --background
+
+# Check status
+/path/to/orcha/orcha-status.sh
+/path/to/orcha/orcha-status.sh --git      # Recent commits
+/path/to/orcha/orcha-status.sh --failed   # Failed files
+/path/to/orcha/orcha-status.sh --watch    # Live monitor
+```
 
 -----
 
@@ -31,6 +62,7 @@ This handles all dependencies (Python, Node/Bun, Refactor tool) for you.
     # Run commands inside the container
     docker compose exec orcha orcha --help
     ```
+
 
 ### Option B: Local Installation
 

@@ -145,6 +145,21 @@ def main():
         default=None,
         help="Override orchestrator max self-heal retries.",
     )
+    parser.add_argument(
+        "--skip-git-check",
+        action="store_true",
+        help="Skip git cleanliness check in orchestrator.",
+    )
+    parser.add_argument(
+        "--auto-stash",
+        action="store_true",
+        help="Auto-stash changes in orchestrator.",
+    )
+    parser.add_argument(
+        "--force-branch",
+        action="store_true",
+        help="Force deletion of existing branch if it exists.",
+    )
 
     args = parser.parse_args()
 
@@ -233,6 +248,12 @@ def main():
             cmd.extend(["--model-spec", args.model_spec])
         if args.max_retries is not None:
             cmd.extend(["--max-retries", str(args.max_retries)])
+        if args.skip_git_check:
+            cmd.append("--skip-git-check")
+        if args.auto_stash:
+            cmd.append("--auto-stash")
+        if args.force_branch:
+            cmd.append("--force-branch")
 
         # Run orchestrator
         try:

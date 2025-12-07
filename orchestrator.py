@@ -33,8 +33,8 @@ def workspace_lock(workspace_root: Path):
         fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         yield
     except BlockingIOError:
-        print(f"[ERROR] Could not acquire lock on {lock_file}.")
-        print("Another orchestrator instance is likely running on this workspace.")
+        print(f"[ERROR] Could not acquire lock on {lock_file}.", file=sys.stderr, flush=True)
+        print("Another orchestrator instance is likely running on this workspace.", file=sys.stderr, flush=True)
         sys.exit(1)
     finally:
         # Unlock and close
@@ -69,6 +69,8 @@ class OrchestratorState(TypedDict, total=False):
     max_retries: int
     last_test_error: str
     force_branch: bool
+    skip_git_check: bool
+    auto_stash: bool
 
     logs: Annotated[list[str], operator.add]
 
@@ -106,7 +108,11 @@ def git(cmd_args, cwd: Path, check=True) -> subprocess.CompletedProcess:
     return run(["git"] + cmd_args, cwd=cwd, check=check, capture_output=True)
 
 
-def ensure_git_clean(cwd: Path):
+def ensure_git_clean(cwd: Path, skip_check: bool = False):
+    if skip_check:
+        print("[WARNING] Skipping git cleanliness check (--skip-git-check active)", file=sys.stderr, flush=True)
+        return
+
     status = run_capture(["git", "status", "--porcelain"], cwd)
     if status.strip():
         raise RuntimeError("Git working tree not clean. Commit or stash before running orchestrator.")
@@ -245,8 +251,21 @@ def node_prepare_repo(state: OrchestratorState) -> OrchestratorState:
                 logs.append(f"[prepare_repo] WARNING: failed to cleanup stale branch: {e}")
         else:
             logs.append("[prepare_repo] WARNING: could not find a base branch (main/master) to switch to.")
+    
+    # Auto-stash logic
+    if state.get("auto_stash"):
+        status = run_capture(["git", "status", "--porcelain"], root)
+        if status.strip():
+            import datetime
+            ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            stash_msg = f"orcha-auto-stash-{ts}"
+            logs.append(f"[prepare_repo] auto-stashing changes: {stash_msg}")
+            try:
+                git(["stash", "push", "-m", stash_msg], cwd=root)
+            except Exception as e:
+                logs.append(f"[prepare_repo] WARNING: auto-stash failed: {e}")
 
-    ensure_git_clean(root)
+    ensure_git_clean(root, skip_check=state.get("skip_git_check", False))
 
     base_branch = run_capture(["git", "rev-parse", "--abbrev-ref", "HEAD"], root)
     logs.append(f"[prepare_repo] base_branch={base_branch}")
@@ -568,6 +587,16 @@ def parse_args():
         action="store_true",
         help="Output final state as JSON (useful for agent integration).",
     )
+    p.add_argument(
+        "--skip-git-check",
+        action="store_true",
+        help="Skip git cleanliness check (DANGEROUS - use with caution).",
+    )
+    p.add_argument(
+        "--auto-stash",
+        action="store_true",
+        help="Automatically stash changes before running and pop after (experimental).",
+    )
     return p.parse_args()
 
 
@@ -593,6 +622,8 @@ def main():
             "max_retries": args.max_retries,
             "last_test_error": "",
             "force_branch": args.force_branch,
+            "skip_git_check": args.skip_git_check,
+            "auto_stash": args.auto_stash,
             "logs": [],
         }
 

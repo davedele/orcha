@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "orcha",
+			"path": "."
+		},
+		{
+			"name": "webdev",
+			"path": "../svc/webdev"
+		}
+	],
+	"settings": {}
+}
