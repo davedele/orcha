@@ -228,22 +228,11 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 
 - **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
   - **Supported Models:**
-
-| Shortcode             | Vendor    | Model             | Thinking Budget   |
-| :-------------------- | :-------- | :---------------- | :---------------- |
-| `g`, `g-`, `g+`       | OpenAI    | GPT-5.1           | Medium, Low, High |
-| `s`, `s-`, `s+`       | Anthropic | Claude Sonnet 4.5 | Medium, Low, High |
-| `o`, `o-`, `o+`       | Anthropic | Claude Opus 4.1   | Medium, Low, High |
-| `i`, `i-`, `i+`       | Google    | Gemini 3 Pro      | Medium, Low, High |
-| `g3f`, `g3f-`, `g3f+` | Google    | Gemini 3 Flash    | Medium, Low, High |
-| `g3fm`                | Google    | Gemini 3 Flash    | Medium (Alias)    |
-| `x`, `x-`, `X`        | xAI       | Grok 4            | Medium, Low, High |
-| `k`, `K`              | Moonshot  | Kimi Latest       | Auto              |
-| `q`, `Q`              | Qwen      | Qwen Coder Plus   | Auto              |
-
-> [!NOTE]
-> Capitalized versions (e.g., `G`, `S`, `O`, `I`, `X`, `K`) are typically aliases for the high-performance or high-thinking variant of the corresponding model.
-
+    - `openai` (default)
+    - `anthropic`
+    - `k` (Kimi K2 - Moonshot)
+    - `i` (Gemini 3 Pro)
+    - `g3f` (Gemini 3 Flash). Variations: `g3f-`, `g3fm`, `g3f+`, `G3F`.
 - **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
 - **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
 
