@@ -41,6 +41,7 @@ Models are now referenced using the canonical `vendor:official_model_name:thinki
 format, for example:
 
 - `openai:gpt-5.1:high`
+- `openai:gpt-5.2:medium`
 - `anthropic:claude-sonnet-4-5-20250929:medium`
 - `google:gemini-3-flash:medium`
 - `openrouter:meta-llama/llama-3.3-70b-instruct:auto`
@@ -52,10 +53,12 @@ follows a consistent pattern:
 
 - Each character (`g`, `G`, `c`, `C`, `l`, `L`, etc.) maps directly to a specific
   vendor/model pairing (e.g., `c` is Claude Sonnet, `C` is Claude Opus, `g` and `G`
-  both map to GPT‑5.1).
+  both map to GPT‑5.1, `g2` maps to GPT-5.2).
 - Append `-` to request the low thinking budget, omit it for medium, and append `+`
-  for high (e.g., `g-`, `g`, `g+` map to `openai:gpt-5.1:low|medium|high`; `g3f-`,
-  `g3f`, `g3f+` map to `google:gemini-3-flash:low|medium|high`).
+  for high (e.g., `g-`, `g`, `g+` map to `openai:gpt-5.1:low|medium|high`; `g2-`,
+  `g2`, `g2+` map to `openai:gpt-5.2:low|medium|high`; `g3f-`, `g3f`, `g3f+` map
+  to `google:gemini-3-flash:low|medium|high`).
+- Special variants: `g2i` (GPT-5.2 Instant), `g2p` (GPT-5.2 Pro).
 
 ## API Reference
 

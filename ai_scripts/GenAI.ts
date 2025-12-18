@@ -16,6 +16,14 @@ export const MODELS: Record<string, string> = {
   'g+': 'openai:gpt-5.1:high',
   'G': 'openai:gpt-5.1:high',
 
+  // OpenAI GPT-5.2 family
+  'g2-': 'openai:gpt-5.2:low',
+  'g2': 'openai:gpt-5.2:medium',
+  'g2+': 'openai:gpt-5.2:high',
+  'G2': 'openai:gpt-5.2:high',
+  'g2i': 'openai:gpt-5.2-instant:auto',  // Fast variant
+  'g2p': 'openai:gpt-5.2-pro:auto',      // Pro variant
+
   // Anthropic Claude
   's-': 'anthropic:claude-sonnet-4-5-20250929:low',
   's': 'anthropic:claude-sonnet-4-5-20250929:medium',

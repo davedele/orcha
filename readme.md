@@ -228,11 +228,15 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 
 - **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
   - **Supported Models:**
-    - `openai` (default)
-    - `anthropic`
-    - `k` (Kimi K2 - Moonshot)
-    - `i` (Gemini 3 Pro)
+    - `g` (GPT-5.1, default). Variations: `g-` (Low), `g`/`G` (Medium/High).
+    - `g2` (GPT-5.2). Variations: `g2-` (Low), `g2`/`G2` (Medium/High), `g2i` (Instant), `g2p` (Pro).
+    - `s` (Claude Sonnet). Variations: `s-` (Low), `s`/`S` (Medium/High).
+    - `o` (Claude Opus). Variations: `o-` (Low), `o`/`O` (Medium/High).
+    - `i` (Gemini 3 Pro). Variations: `i-` (Low), `i`/`I` (Medium/High).
     - `g3f` (Gemini 3 Flash). Variations: `g3f-` (Low), `g3f`/`g3fm` (Medium), `g3f+`/`G3F` (High).
+    - `x` (Grok 4). Variations: `x-` (Low), `x`/`X` (Medium/High).
+    - `k` (Kimi K2 - Moonshot).
+    - `q` (Qwen Coder Plus).
 - **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
 - **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
 
