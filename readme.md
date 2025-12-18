@@ -232,7 +232,7 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
     - `anthropic`
     - `k` (Kimi K2 - Moonshot)
     - `i` (Gemini 3 Pro)
-    - `g3f` (Gemini 3 Flash). Variations: `g3f-`, `g3fm`, `g3f+`, `G3F`.
+    - `g3f` (Gemini 3 Flash). Variations: `g3f-` (Low), `g3f`/`g3fm` (Medium), `g3f+`/`G3F` (High).
 - **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
 - **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
 
