@@ -33,6 +33,12 @@ export const MODELS: Record<string, string> = {
   'i+': 'google:gemini-3-pro-preview:high',
   'I': 'google:gemini-3-pro-preview:high',
 
+  'g3f-': 'google:gemini-3-flash:low',
+  'g3f': 'google:gemini-3-flash:medium',
+  'g3fm': 'google:gemini-3-flash:medium',
+  'g3f+': 'google:gemini-3-flash:high',
+  'G3F': 'google:gemini-3-flash:high',
+
   // xAI Grok
   'x-': 'xai:grok-4-0709:low',
   'x': 'xai:grok-4-0709:medium',
@@ -278,7 +284,7 @@ function mapThinkingToGoogle(
   const level: 'low' | 'high' = thinking === 'low' ? 'low' : 'high';
   const budget = thinking === 'low' ? 2048 : thinking === 'medium' ? 4096 : 8192;
   const modelName = model.toLowerCase();
-  const prefersBudget = modelName.includes('gemini-2.5');
+  const prefersBudget = modelName.includes('gemini-2.5') || modelName.includes('gemini-3');
   return {
     config: {
       ...baseConfig,

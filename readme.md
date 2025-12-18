@@ -4,15 +4,15 @@ A multi-agent pipeline for orchestrating large-scale code refactors safely. This
 
 ## The Toolkit
 
-| Script | Role | Description |
-| :--- | :--- | :--- |
-| **orchestrator.py** | **The Worker** | Refactors a *single file* safely. Creates a git branch, runs the AI, runs tests, and commits only on success. |
-| **scan\_and\_refactor.py** | **The Manager** | Scans your project, filters files (ignoring node\_modules, tests), and assigns work to the Orchestrator. |
-| **propagate\_rename.py** | **The Fixer** | A "Search & Replace" utility to fix broken imports across the project after a rename refactor. |
-| **orcha-run.sh** | **Easy Runner** | Simplified wrapper for running orcha with sensible defaults. |
-| **orcha-status.sh** | **Monitor** | Check run status, view failures, and see recent git activity. |
+| Script                   | Role            | Description                                                                                                   |
+| :----------------------- | :-------------- | :------------------------------------------------------------------------------------------------------------ |
+| **orchestrator.py**      | **The Worker**  | Refactors a _single file_ safely. Creates a git branch, runs the AI, runs tests, and commits only on success. |
+| **scan_and_refactor.py** | **The Manager** | Scans your project, filters files (ignoring node_modules, tests), and assigns work to the Orchestrator.       |
+| **propagate_rename.py**  | **The Fixer**   | A "Search & Replace" utility to fix broken imports across the project after a rename refactor.                |
+| **orcha-run.sh**         | **Easy Runner** | Simplified wrapper for running orcha with sensible defaults.                                                  |
+| **orcha-status.sh**      | **Monitor**     | Check run status, view failures, and see recent git activity.                                                 |
 
------
+---
 
 ## Quick Start (Recommended)
 
@@ -41,7 +41,7 @@ cd /path/to/your/project
 /path/to/orcha/orcha-status.sh --watch    # Live monitor
 ```
 
------
+---
 
 ## Parallel Execution (Speed Up 3x+)
 
@@ -56,11 +56,13 @@ For large codebases, run multiple workers in parallel using separate clones:
 ```
 
 **Requirements:**
+
 - Clean working tree (use `--allow-dirty` to bypass)
 - Named branch (not detached HEAD)
 - TARGET_DIR must be relative path inside repo
 
 **Behavior differences from `orcha-run.sh`:**
+
 - Tests disabled by default (use `--test-cmd` to enable)
 - Creates staging branch `orcha-merged-*`; must manually fast-forward merge
 - Clones are isolated; no `--skip-git-check` needed
@@ -72,8 +74,6 @@ git merge --ff-only orcha-merged-YYYYMMDD-HHMMSS
 rm -rf /tmp/orcha-clones/<repo-name>  # Cleanup (script prints exact path)
 ```
 
-
-
 ## Installation
 
 ### Option A: Docker (Recommended)
@@ -81,12 +81,13 @@ rm -rf /tmp/orcha-clones/<repo-name>  # Cleanup (script prints exact path)
 This handles all dependencies (Python, Node/Bun, Refactor tool) for you.
 
 1.  **Run with Docker Compose:**
+
     ```bash
     # Set your API keys first
     export OPENAI_API_KEY=sk-...
     export GOOGLE_API_KEY=...
     export MOONSHOT_API_KEY=...
-    
+
     # Start the persistent container
     docker compose up -d
 
@@ -94,27 +95,29 @@ This handles all dependencies (Python, Node/Bun, Refactor tool) for you.
     docker compose exec orcha orcha --help
     ```
 
-
 ### Option B: Local Installation
 
 The tools are located in the root directory. You can install them as a python package for easy access.
 
 1.  **Install the Package:**
+
     ```bash
     pip install .
     ```
-    *Alternatively, install dependencies manually:*
+
+    _Alternatively, install dependencies manually:_
+
     ```bash
     pip install -r requirements.txt
     ```
 
 2.  **External Requirements:**
-    *   **Node.js / Bun**: Required for running the underlying refactor tool.
-    *   **Refactor Tool**: This pipeline expects `Refactor.ts` (or a similar CLI tool) to be present.
-        *   *Recommendation:* [VictorTaelin/AI-scripts](https://github.com/VictorTaelin/AI-scripts)
-        *   Ensure `Refactor.ts` is executable or callable via `bun Refactor.ts`.
+    - **Node.js / Bun**: Required for running the underlying refactor tool.
+    - **Refactor Tool**: This pipeline expects `Refactor.ts` (or a similar CLI tool) to be present.
+      - _Recommendation:_ [VictorTaelin/AI-scripts](https://github.com/VictorTaelin/AI-scripts)
+      - Ensure `Refactor.ts` is executable or callable via `bun Refactor.ts`.
 
------
+---
 
 ## Usage
 
@@ -154,7 +157,7 @@ orcha \
 5.  **Success:** Merges to main and deletes branch.
 6.  **Fail:** Reverts changes, deletes branch, and logs error.
 
------
+---
 
 ### Level 2: Mass Refactor (Batch Mode)
 
@@ -188,9 +191,9 @@ The script maintains a `refactor_history.jsonl` file in the current directory. T
 
 **Configuration:**
 
-  * Edit `scan_and_refactor.py` to modify `IGNORE_DIRS` (default: `node_modules`, `dist`, `.git`) or `IGNORE_FILES`.
+- Edit `scan_and_refactor.py` to modify `IGNORE_DIRS` (default: `node_modules`, `dist`, `.git`) or `IGNORE_FILES`.
 
------
+---
 
 ### Level 3: Structural Changes (The "Dangerous" Mode)
 
@@ -210,7 +213,7 @@ Use this workflow when renaming classes or functions that are imported by other 
     npm test
     ```
 
------
+---
 
 ## Safety Protocols
 
@@ -219,31 +222,31 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 1.  **The "Git Latch":** The orchestrator will **refuse to run** if your git working tree is dirty. Commit or stash your work first.
 2.  **The "Revert Trigger":** If `npm test` fails, the Orchestrator performs a `git reset --hard`. It does not leave broken code in your repo.
 3.  **Concurrency Lock:** A `.orcha.lock` file prevents multiple orchestrator instances from running simultaneously on the same workspace.
-4.  **Context Limits:** The `scan_and_refactor.py` processes files *sequentially*. It does not feed the entire codebase to the context window, saving you money and token limits.
+4.  **Context Limits:** The `scan_and_refactor.py` processes files _sequentially_. It does not feed the entire codebase to the context window, saving you money and token limits.
 
 ## Customization
 
-  * **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
-    *   **Supported Models:**
-        *   `openai` (default)
-        *   `anthropic`
-        *   `k` (Kimi K2 - Moonshot)
-        *   `i` (Gemini 1.5 Pro)
-  * **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
-  * **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
+- **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
+  - **Supported Models:**
+    - `openai` (default)
+    - `anthropic`
+    - `k` (Kimi K2 - Moonshot)
+    - `i` (Gemini 3 Pro)
+    - `g3f` (Gemini 3 Flash)
+- **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
+- **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
 
 ## Recipes
 
-*   [Refactoring jQuery to ES6](recipes/jquery_to_es6.md)
-
+- [Refactoring jQuery to ES6](recipes/jquery_to_es6.md)
 
 ## Troubleshooting
 
-| Issue | Solution |
-| :--- | :--- |
-| **"Git working tree not clean"** | You have uncommitted changes. Run `git stash` before starting. |
-| **Tests fail immediately** | Ensure the `--test-cmd` you passed is valid for that specific file. |
-| **Refactor.ts not found** | Check the `refactor_cmd` argument in `orchestrator.py`. Ensure you have the dependency installed. |
-| **Infinite Loop** | The agent might be "fixing" code back and forth. Reduce `MAX_RETRIES` to 1. |
-| **"Git user not configured"** | Run `git config --global user.email ...` inside the container or mount your .gitconfig. |
-| **API Key Errors** | Ensure `GOOGLE_API_KEY` or `MOONSHOT_API_KEY` are set if using those models. |
+| Issue                            | Solution                                                                                          |
+| :------------------------------- | :------------------------------------------------------------------------------------------------ |
+| **"Git working tree not clean"** | You have uncommitted changes. Run `git stash` before starting.                                    |
+| **Tests fail immediately**       | Ensure the `--test-cmd` you passed is valid for that specific file.                               |
+| **Refactor.ts not found**        | Check the `refactor_cmd` argument in `orchestrator.py`. Ensure you have the dependency installed. |
+| **Infinite Loop**                | The agent might be "fixing" code back and forth. Reduce `MAX_RETRIES` to 1.                       |
+| **"Git user not configured"**    | Run `git config --global user.email ...` inside the container or mount your .gitconfig.           |
+| **API Key Errors**               | Ensure `GOOGLE_API_KEY` or `MOONSHOT_API_KEY` are set if using those models.                      |

@@ -1,13 +1,13 @@
-GenAI.ts
-=======
+# GenAI.ts
+
 GenAI.ts is a TypeScript library providing a unified interface for interacting with various AI language models from providers like OpenAI, Anthropic, Google, and others. It enables stateful chat interactions, allowing users to send messages and receive responses from AI models seamlessly.
 
 The library abstracts the complexities of different AI APIs, enabling easy switching between models or providers without code changes. It supports features like streaming responses, temperature control, and system prompts where applicable.
 
-Usage
------
+## Usage
+
 ```typescript
-import { GenAI } from './GenAI';
+import { GenAI } from "./GenAI";
 
 async function main() {
   const ai = await GenAI("openai:gpt-5.1:medium");
@@ -32,16 +32,17 @@ async function main() {
   console.log(history);
 }
 ```
+
 In this example, we create a chat instance for GPT-4o, send two messages, and then retrieve the conversation history.
 
-Models
-------
+## Models
+
 Models are now referenced using the canonical `vendor:official_model_name:thinking_budget`
 format, for example:
 
 - `openai:gpt-5.1:high`
 - `anthropic:claude-sonnet-4-5-20250929:medium`
-- `google:gemini-2.5-pro:medium`
+- `google:gemini-3-flash:medium`
 - `openrouter:meta-llama/llama-3.3-70b-instruct:auto`
 - `xai:grok-4-0709:auto`
 
@@ -53,32 +54,39 @@ follows a consistent pattern:
   vendor/model pairing (e.g., `c` is Claude Sonnet, `C` is Claude Opus, `g` and `G`
   both map to GPT‑5.1).
 - Append `-` to request the low thinking budget, omit it for medium, and append `+`
-  for high (e.g., `g-`, `g`, `g+` map to `openai:gpt-5.1:low|medium|high`).
+  for high (e.g., `g-`, `g`, `g+` map to `openai:gpt-5.1:low|medium|high`; `g3f-`,
+  `g3f`, `g3f+` map to `google:gemini-3-flash:low|medium|high`).
 
-API Reference
--------------
+## API Reference
+
 ### GenAI
+
 Creates and returns a chat instance for the specified model.
 
 **Signature:** `async function GenAI(modelShortcode: string): Promise<ChatInstance>`  
-**Parameters:**  
+**Parameters:**
+
 - `modelShortcode: string` - Model shortcode (e.g., "g") or full model name.  
-**Returns:** A promise resolving to a `ChatInstance`.
+  **Returns:** A promise resolving to a `ChatInstance`.
 
 ### ChatInstance
+
 Interface for chat interactions.
 
 #### ask
+
 **Signature:** `ask(userMessage: string | null, options: AskOptions): Promise<string | { messages: { role: string; content: string }[] }>`  
-**Parameters:**  
-- `userMessage: string | null` - Message to send. If `null`, returns conversation history.  
+**Parameters:**
+
+- `userMessage: string | null` - Message to send. If `null`, returns conversation history.
 - `options: AskOptions` - Configuration options.  
-**Returns:**  
-- If `userMessage` is a string: AI's response as a string.  
+  **Returns:**
+- If `userMessage` is a string: AI's response as a string.
 - If `userMessage` is `null`: Object containing conversation history.  
-**Note:** When `stream` is `true`, the response is streamed to `stdout`, and the full response is still returned as a string.
+  **Note:** When `stream` is `true`, the response is streamed to `stdout`, and the full response is still returned as a string.
 
 ### AskOptions
+
 Options for the `ask` method:
 
 - `system?: string` - System prompt to set assistant behavior.
@@ -93,26 +101,29 @@ Options for the `ask` method:
 **Note:** Not all options apply to every model; unsupported options are ignored.
 
 ### MODELS
+
 Record mapping shortcodes to model names. See [Models](#models) for details.
 
 ### tokenCount
+
 Estimates token count using GPT-4o's tokenizer.
 
 **Signature:** `function tokenCount(text: string): number`  
-**Parameters:**  
-- `text: string` - Text to analyze.  
-**Returns:** Estimated token count.  
-**Note:** This is an approximation; actual counts may vary by model.
+**Parameters:**
 
-Setup
------
+- `text: string` - Text to analyze.  
+  **Returns:** Estimated token count.  
+  **Note:** This is an approximation; actual counts may vary by model.
+
+## Setup
+
 Ensure API keys are set in `~/.config/<vendor>.token` (e.g., `~/.config/openai.token`).
 Supported vendors are `openai`, `anthropic`, `google`, `openrouter`, and `xai`.
 
 For OpenRouter, the library sets the `HTTP-Referer` header to `"https://github.com/OpenRouterTeam/openrouter-examples"`.
 
-Additional Notes
-----------------
+## Additional Notes
+
 - **Streaming:** When enabled, responses are streamed to `stdout`. When vendors expose
   explicit thinking traces (OpenAI Responses, Anthropic, Gemini), they are printed
   in dim gray before the final answer.
