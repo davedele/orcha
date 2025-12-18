@@ -55,11 +55,25 @@ For large codebases, run multiple workers in parallel using separate clones:
 /path/to/orcha/orcha-parallel.sh src "Add types" 3 --test-cmd "npm test"
 ```
 
+### Model Comparison (A/B Testing)
+
+Compare different AI models on the same files using `--models`:
+
+```bash
+# Compare Gemini 3 Flash vs GPT-5.2 on a single file
+/path/to/orcha/orcha-parallel.sh --file src/foo.js "Refactor to ES6" --models g3f,g2
+
+# Compare models on a directory (each model processes ALL files)
+/path/to/orcha/orcha-parallel.sh src "Add JSDoc" 1 --models g3f,g2,s
+```
+
+With `--models`, each model gets its own staging branch (`orcha-merged-<model>-<timestamp>`) for easy comparison.
+
 **Requirements:**
 
 - Clean working tree (use `--allow-dirty` to bypass)
 - Named branch (not detached HEAD)
-- TARGET_DIR must be relative path inside repo
+- TARGET_DIR/FILE must be relative path inside repo
 
 **Behavior differences from `orcha-run.sh`:**
 
