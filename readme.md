@@ -227,19 +227,23 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 ## Customization
 
 - **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
+
   - **Supported Models:**
 
-    Suffix meanings: `-` = Low thinking budget, no suffix = Medium, `+` or UPPERCASE = High.
+    | Shortcode                            | Model                                        |
+    | ------------------------------------ | -------------------------------------------- |
+    | `g-`, `g`, `g+`, `G`                 | GPT-5.1 (low/medium/high/high)               |
+    | `g2-`, `g2`, `g2+`, `G2`             | GPT-5.2 (low/medium/high/high)               |
+    | `g2i`                                | GPT-5.2 Instant                              |
+    | `g2p`                                | GPT-5.2 Pro                                  |
+    | `s-`, `s`, `s+`, `S`                 | Claude Sonnet 4.5 (low/medium/high/high)     |
+    | `o-`, `o`, `o+`, `O`                 | Claude Opus 4.1 (low/medium/high/high)       |
+    | `i-`, `i`, `i+`, `I`                 | Gemini 3 Pro (low/medium/high/high)          |
+    | `g3f-`, `g3f`, `g3fm`, `g3f+`, `G3F` | Gemini 3 Flash (low/medium/medium/high/high) |
+    | `x-`, `x`, `X`                       | Grok 4 (low/medium/high)                     |
+    | `k`, `K`                             | Kimi K2 (Moonshot)                           |
+    | `q`, `Q`                             | Qwen Coder Plus                              |
 
-    - `g` (GPT-5.1, default). Variations: `g-`, `g`, `g+`, `G`.
-    - `g2` (GPT-5.2). Variations: `g2-`, `g2`, `g2+`, `G2`, `g2i` (Instant), `g2p` (Pro).
-    - `s` (Claude Sonnet). Variations: `s-`, `s`, `s+`, `S`.
-    - `o` (Claude Opus). Variations: `o-`, `o`, `o+`, `O`.
-    - `i` (Gemini 3 Pro). Variations: `i-`, `i`, `i+`, `I`.
-    - `g3f` (Gemini 3 Flash). Variations: `g3f-`, `g3f`, `g3fm`, `g3f+`, `G3F`.
-    - `x` (Grok 4). Variations: `x-`, `x`, `X`.
-    - `k` / `K` (Kimi K2 - Moonshot).
-    - `q` / `Q` (Qwen Coder Plus).
 - **Change the Test Command:** Default is `npm test`. You can override this per run or globally in the script defaults.
 - **Retry Logic:** Adjust `MAX_RETRIES` in `orchestrator.py` if you want the agent to try fixing its own errors more aggressively.
 
