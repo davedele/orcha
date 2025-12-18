@@ -228,6 +228,9 @@ This pipeline is designed to be **nondestructive**, but AI is unpredictable.
 
 - **Change the LLM:** Modify the `Refactor.ts` call in `orchestrator.py` (inside `node_run_refactor`) to point to a different model or script.
   - **Supported Models:**
+
+    Suffix meanings: `-` = Low thinking budget, no suffix = Medium, `+` or UPPERCASE = High.
+
     - `g` (GPT-5.1, default). Variations: `g-`, `g`, `g+`, `G`.
     - `g2` (GPT-5.2). Variations: `g2-`, `g2`, `g2+`, `G2`, `g2i` (Instant), `g2p` (Pro).
     - `s` (Claude Sonnet). Variations: `s-`, `s`, `s+`, `S`.
